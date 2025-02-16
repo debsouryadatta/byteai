@@ -1,0 +1,39 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  urls      Url[]
+}
+
+model Url {
+  id          String    @id @default(cuid())
+  originalUrl String    @db.VarChar(3000)
+  shortUrl    String    @unique
+  shortCode   String    @unique
+  name        String?
+  clicks      Int       @default(0)
+  pageContent String?
+  summary     String?
+  qrCodeUrl   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([shortCode])
+  @@index([userId])
+}
