@@ -14,9 +14,11 @@ import {
 } from "@/components/ui/select";
 import { useRouter } from "next/navigation";
 import { WebsiteCard } from "./website-card";
-import { useState, useMemo } from "react";
-
-const MotionCard = motion(Card);
+import { useState, useMemo, useEffect } from "react";
+import { toast } from "sonner";
+import { createWebsiteAction, deleteWebsiteAction, fetchWebsitesAction, updateWebsiteNameAction } from "@/actions/chat-with-site";
+import { Website } from "@prisma/client";
+import { debounce } from "lodash";
 
 // Format date consistently
 const formatDate = (dateString: string) => {
@@ -27,27 +29,13 @@ const formatDate = (dateString: string) => {
   }).format(new Date(dateString));
 };
 
-// Demo data
-const initialSites = [
-  {
-    id: 1,
-    name: "My Portfolio",
-    url: "https://portfolio.com",
-    createdAt: "2024-02-15T12:00:00Z",
-  },
-  {
-    id: 2,
-    name: "Tech Blog",
-    url: "https://techblog.com",
-    createdAt: "2024-02-14T15:30:00Z",
-  },
-];
-
 export function ChatWithSiteContent() {
   const router = useRouter();
-  const [sites, setSites] = useState(initialSites);
+  const [sites, setSites] = useState<Website[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>("newest");
+  const [url, setUrl] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -72,53 +60,78 @@ export function ChatWithSiteContent() {
     },
   };
 
-  const handleCardClick = (id: number) => {
+  useEffect(() => {
+    const fetchSites = async () => {
+      try {
+        const result = await fetchWebsitesAction(sortBy, searchQuery);
+        setSites(result); 
+      } catch (error) {
+        console.log("Error fetching sites:", error);
+      }
+    }
+    fetchSites();
+  }, [sortBy, searchQuery])
+
+  const handleCardClick = (id: string) => {
     router.push(`/chat-with-site/info/${id}`);
   };
 
   // Handle site deletion
-  const handleDeleteSite = (id: number) => {
-    setSites((prevSites) => prevSites.filter((site) => site.id !== id));
+  const handleDeleteSite = async (id: string) => {
+    try {
+      await deleteWebsiteAction(id);
+      setSites((prevSites) => prevSites.filter((site) => site.id !== id));
+      toast.success("Site deleted successfully");
+    } catch (error) {
+      console.log("Error deleting site:", error);
+      toast.error("Error deleting site");
+    }
   };
 
   // Handle site name update
-  const handleUpdateSiteName = (id: number, newName: string) => {
-    setSites((prevSites) =>
-      prevSites.map((site) =>
-        site.id === id ? { ...site, name: newName } : site
-      )
-    );
+  const handleUpdateSiteName = async (id: string, newName: string) => {
+    try {
+      await updateWebsiteNameAction(id, newName);
+      setSites((prevSites) =>
+        prevSites.map((site) =>
+          site.id === id ? { ...site, name: newName } : site
+        )
+      );
+      toast.success("Site name updated successfully");
+    } catch (error) {
+      console.log("Error updating site name:", error);
+      toast.error("Error updating site name");
+    }
   };
 
-  // Filter and sort sites
-  const filteredAndSortedSites = useMemo(() => {
-    let result = [...sites];
-
-    // Apply search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (site) =>
-          site.name.toLowerCase().includes(query) ||
-          site.url.toLowerCase().includes(query)
-      );
+  const createWebsite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsCreating(true);
+    try {
+      const website = await createWebsiteAction(url);
+      console.log("Website created:", website);
+      toast.success("Site added to the list");
+      setUrl("");
+    } catch (error) {
+      console.log("Error creating website:", error);
+      toast.error("Error creating website");
+    } finally {
+      setIsCreating(false);
     }
+  }
 
-    // Apply sorting
-    switch (sortBy) {
-      case "newest":
-        result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        break;
-      case "oldest":
-        result.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-        break;
-      case "name":
-        result.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-    }
+  // Create debounced search handler
+  const debouncedSetSearchQuery = useMemo(
+    () => debounce((value: string) => setSearchQuery(value), 300),
+    []
+  );
 
-    return result;
-  }, [sites, searchQuery, sortBy]);
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      debouncedSetSearchQuery.cancel();
+    };
+  }, [debouncedSetSearchQuery]);
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-cyan-50 via-cyan-100 to-cyan-50 dark:from-cyan-950 dark:via-black dark:to-cyan-950">
@@ -176,15 +189,17 @@ export function ChatWithSiteContent() {
 
         {/* URL Input Section */}
         <motion.div variants={itemVariants} className="max-w-3xl mx-auto space-y-4">
-          <div className="flex flex-col md:flex-row gap-4">
+          <form onSubmit={createWebsite} className="flex flex-col md:flex-row gap-4">
             <Input
               placeholder="Enter the website link"
               className="flex-1 bg-white/50 dark:bg-gray-950/50 backdrop-blur-sm"
+              onChange={(e) => setUrl(e.target.value)}
+              value={url}
             />
-            <Button className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white">
-              Submit
+            <Button type="submit" className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white" disabled={isCreating}>
+              { isCreating ? "Submitting..." : "Submit" }
             </Button>
-          </div>
+          </form>
         </motion.div>
 
         {/* Search and Filter Section */}
@@ -198,8 +213,8 @@ export function ChatWithSiteContent() {
               <Input
                 placeholder="Search sites..."
                 className="pl-10 bg-white/50 dark:bg-gray-950/50 backdrop-blur-sm"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                defaultValue={searchQuery}
+                onChange={(e) => debouncedSetSearchQuery(e.target.value)}
               />
             </div>
           </div>
@@ -223,12 +238,11 @@ export function ChatWithSiteContent() {
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             List of Sites
           </h2>
-          {filteredAndSortedSites.map((site) => (
+          {sites.map((site) => (
             <WebsiteCard
               key={site.id}
               site={site}
               onCardClick={handleCardClick}
-              formatDate={formatDate}
               onDelete={handleDeleteSite}
               onUpdateName={handleUpdateSiteName}
             />

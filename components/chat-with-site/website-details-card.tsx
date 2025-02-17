@@ -3,27 +3,16 @@ import { Button } from "@/components/ui/button";
 import { MessageSquare, FileText, Plus, ExternalLink, Calendar, Pencil, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-
-interface Note {
-  id: number;
-  name: string;
-  content: string;
-  createdAt: string;
-}
+import { Note, Website } from "@prisma/client";
 
 interface WebsiteDetailsCardProps {
-  websiteData: {
-    name: string;
-    url: string;
-    createdAt: string;
-    notes: Note[];
-  };
+  websiteData: Website;
   setShowSummary: (show: boolean) => void;
   setShowNoteDialog: (show: boolean) => void;
   setSelectedNote: (note: Note | null) => void;
   handleEditNote: (note: Note | null) => void;
   handleDeleteNote: (note: Note | null) => void;
-  formatDate: (date: string) => string;
+  notes: Note[];
 }
 
 export function WebsiteDetailsCard({
@@ -33,7 +22,7 @@ export function WebsiteDetailsCard({
   setSelectedNote,
   handleEditNote,
   handleDeleteNote,
-  formatDate
+  notes
 }: WebsiteDetailsCardProps) {
   const router = useRouter();
 
@@ -45,19 +34,19 @@ export function WebsiteDetailsCard({
           <div className="space-y-3">
             <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300 group">
               <ExternalLink className="h-5 w-5 group-hover:text-primary transition-colors duration-300" />
-              <a href={websiteData.url} target="_blank" rel="noopener noreferrer" 
+              <a href={websiteData?.url} target="_blank" rel="noopener noreferrer" 
                 className="hover:text-primary transition-colors duration-300 text-lg">
-                {websiteData.url}
+                {websiteData?.url}
               </a>
             </div>
             <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
               <Calendar className="h-5 w-5" />
-              <span className="text-lg">Created on {formatDate(websiteData.createdAt)}</span>
+              <span className="text-lg">Created on {new Date(websiteData?.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
             </div>
           </div>
           <div className="flex flex-col md:flex-row gap-4">
             <Button 
-              onClick={() => router.push(`/chat-with-site/chat-room/${1}`)}
+              onClick={() => router.push(`/chat-with-site/chat-room/${websiteData?.id}`)}
               className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white shadow-md hover:shadow-lg transition-all duration-300 px-6"
             >
               <MessageSquare className="h-5 w-5 mr-2" />
@@ -93,16 +82,16 @@ export function WebsiteDetailsCard({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <AnimatePresence>
-            {websiteData.notes.map((note) => (
+            {notes.map((note) => (
               <Card
-                key={note.id}
+                key={note?.id}
                 onClick={() => setSelectedNote(note)}
                 className="p-6 hover:shadow-xl transition-all duration-300 cursor-pointer bg-white/50 dark:bg-gray-950/50 border-gray-200/50 dark:border-gray-800/50 backdrop-blur-sm group hover:bg-white/70 dark:hover:bg-gray-900/60"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 group-hover:text-primary transition-colors duration-300">
-                      {note.name}
+                      {note?.title}
                     </h3>
                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button
@@ -129,11 +118,11 @@ export function WebsiteDetailsCard({
                     </div>
                   </div>
                   <p className="text-base text-gray-600 dark:text-gray-300 line-clamp-2">
-                    {note.content}
+                    {note?.content}
                   </p>
                   <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                     <Calendar className="h-4 w-4" />
-                    {formatDate(note.createdAt)}
+                    {new Date(note.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                   </div>
                 </div>
               </Card>

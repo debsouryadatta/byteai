@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { fetchDashboardDataAction } from "@/actions/dashboard";
 
 const MotionCard = motion(Card);
 
@@ -51,6 +53,25 @@ export function DashboardContent() {
     },
     tap: { scale: 0.95 },
   };
+
+  const [dashboardData, setDashboardData] = useState({
+    websites: 0,
+    pdfs: 0,
+    ytVideos: 0,
+  });
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const data = await fetchDashboardDataAction();
+        console.log("Data: ", data);
+        setDashboardData(data);
+      } catch (error) {
+        console.log("Error fetching dashboard data:", error);
+      }
+    };
+    fetchDashboardData();
+  }, []);
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-cyan-50 via-cyan-100 to-cyan-50 dark:from-cyan-950 dark:via-black dark:to-cyan-950">
@@ -105,17 +126,17 @@ export function DashboardContent() {
           {[
             {
               title: "Chat with Site",
-              count: 0,
+              count: dashboardData?.websites,
               description: "Total chats with websites",
             },
             {
               title: "Chat with PDF",
-              count: 0,
+              count: dashboardData?.pdfs,
               description: "Total PDF conversations",
             },
             {
               title: "Chat with YouTube",
-              count: 0,
+              count: dashboardData?.ytVideos,
               description: "Total YouTube conversations",
             },
           ].map((item, index) => (

@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ai-sdk/google": "^1.1.14",
+    "@ai-sdk/react": "^1.1.16",
     "@clerk/nextjs": "^6.11.0",
     "@hookform/resolvers": "^3.9.0",
     "@next/swc-wasm-nodejs": "14.2.23",
@@ -43,6 +45,7 @@
     "@types/node": "20.6.2",
     "@types/react": "18.2.22",
     "@types/react-dom": "18.2.7",
+    "ai": "^4.1.41",
     "autoprefixer": "10.4.15",
     "class-variance-authority": "^0.7.0",
     "cloudinary": "^2.5.1",
@@ -54,6 +57,7 @@
     "eslint-config-next": "14.2.23",
     "framer-motion": "^12.4.3",
     "input-otp": "^1.2.4",
+    "lodash": "^4.17.21",
     "lucide-react": "^0.446.0",
     "nanoid": "^5.0.9",
     "next": "14.2.23",
@@ -79,6 +83,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.15",
     "@types/qrcode": "^1.5.5"
   }
 }

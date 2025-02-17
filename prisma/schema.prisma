@@ -10,30 +10,80 @@ generator client {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
+  id        String    @id @default(cuid())
+  email     String    @unique
   name      String?
   imageUrl  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  urls      Url[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  websites  Website[]
+  pdfs      Pdf[]
+  ytVideos  Youtube[]
+  notes     Note[]
 }
 
-model Url {
-  id          String    @id @default(cuid())
-  originalUrl String    @db.VarChar(3000)
-  shortUrl    String    @unique
-  shortCode   String    @unique
+model Website {
+  id          String   @id @default(cuid())
   name        String?
-  clicks      Int       @default(0)
+  url         String
   pageContent String?
-  summary     String?
-  qrCodeUrl   String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  pageSummary String?
+  chatHistory Json[]   @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notes       Note[]
+}
 
-  @@index([shortCode])
-  @@index([userId])
+model Pdf {
+  id           String   @id @default(cuid())
+  name         String?
+  originalName String?
+  pdfUrl       String?
+  pdfContent   String?
+  pdfSummary   String?
+  chatHistory  Json[]   @default([])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notes        Note[]
+}
+
+model Youtube {
+  id              String   @id @default(cuid())
+  name            String?
+  ytLink          String
+  subtitleContent String?
+  subtitleSummary String?
+  chatHistory     Json[]   @default([])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notes           Note[]
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  title     String?
+  content   String?
+  type      NoteType?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  websiteId String?
+  website   Website? @relation(fields: [websiteId], references: [id], onDelete: SetNull)
+  pdfId     String?
+  pdf       Pdf?     @relation(fields: [pdfId], references: [id], onDelete: SetNull)
+  ytVideoId String?
+  ytVideo   Youtube? @relation(fields: [ytVideoId], references: [id], onDelete: SetNull)
+}
+
+enum NoteType {
+  WEBSITE
+  PDF
+  YOUTUBE
 }

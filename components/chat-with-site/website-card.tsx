@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Website } from "@prisma/client";
 import { motion } from "framer-motion";
 import { ExternalLink, Pencil, Check, X, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -10,29 +11,20 @@ import { toast } from "sonner";
 
 const MotionCard = motion(Card);
 
-interface Website {
-  id: number;
-  name: string;
-  url: string;
-  createdAt: string;
-}
-
 interface WebsiteCardProps {
   site: Website;
-  onCardClick: (id: number) => void;
-  formatDate: (date: string) => string;
-  onDelete: (id: number) => void;
-  onUpdateName: (id: number, newName: string) => void;
+  onCardClick: (id: string) => void;
+  onDelete: (id: string) => void;
+  onUpdateName: (id: string, newName: string) => void;
 }
 
-export function WebsiteCard({ site, onCardClick, formatDate, onDelete, onUpdateName }: WebsiteCardProps) {
-  const [editingId, setEditingId] = useState<number | null>(null);
+export function WebsiteCard({ site, onCardClick, onDelete, onUpdateName }: WebsiteCardProps) {
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onDelete(site.id);
-    toast.success("Website deleted successfully");
+    onDelete(site?.id);
   };
 
   const handleExternalLink = (e: React.MouseEvent, url: string) => {
@@ -50,7 +42,6 @@ export function WebsiteCard({ site, onCardClick, formatDate, onDelete, onUpdateN
     e.stopPropagation();
     if (editName.trim()) {
       onUpdateName(site.id, editName.trim());
-      toast.success("Website name updated successfully");
       setEditingId(null);
     }
   };
@@ -104,7 +95,7 @@ export function WebsiteCard({ site, onCardClick, formatDate, onDelete, onUpdateN
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 text-gray-500"
-                onClick={(e) => startEditing(e, site.name)}
+                onClick={(e) => startEditing(e, site.name ?? "")}
               >
                 <Pencil className="h-4 w-4" />
               </Button>
@@ -129,7 +120,7 @@ export function WebsiteCard({ site, onCardClick, formatDate, onDelete, onUpdateN
       </CardHeader>
       <CardContent className="px-4 pb-4 pt-0">
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Created at: {formatDate(site.createdAt)}
+          Created on: {new Date(site.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
         </p>
       </CardContent>
     </MotionCard>

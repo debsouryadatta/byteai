@@ -17,7 +17,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { SignedIn,  UserButton } from "@clerk/nextjs";
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {}
 
@@ -106,13 +107,21 @@ export function Sidebar({ className }: SidebarProps) {
 
       <div className="flex flex-col gap-2 p-2 border-t border-t-cyan-100 dark:border-t-cyan-900/30">
         <ThemeToggle isCollapsed={false} />
-        <Button
-          variant="ghost"
-          className="w-full justify-start h-10 hover:bg-cyan-100 dark:hover:bg-cyan-800/20"
-        >
-          <User className="h-4 w-4" />
-          <span className="ml-2 text-sm">debsourya</span>
-        </Button>
+        <SignedIn>
+          <UserButton
+            afterSignOutUrl="/"
+            appearance={{
+              elements: {
+                rootBox: "w-full",
+                userButtonTrigger: "w-full justify-start h-10 hover:bg-cyan-100 dark:hover:bg-cyan-800/20 p-4 rounded-md dark:text-white text-lg",
+                userButtonBox: "flex flex-row-reverse items-center",
+                userButtonOuterIdentifier: "-ml-1",
+                avatarBox: "h-6 w-6"
+              }
+            }}
+            showName
+          />
+        </SignedIn>
       </div>
     </>
   );
@@ -200,18 +209,21 @@ export function Sidebar({ className }: SidebarProps) {
       <div className="flex flex-col gap-2 p-2 border-t border-t-cyan-100 dark:border-t-cyan-900/30">
         <ThemeToggle isCollapsed={isCollapsed} />
         
-        <Button
-          variant="ghost"
-          className={cn(
-            "w-full justify-start h-10 hover:bg-cyan-100 dark:hover:bg-cyan-800/20",
-            isCollapsed && "justify-center px-2"
-          )}
-        >
-          <User className="h-4 w-4" />
-          {!isCollapsed && (
-            <span className="ml-2 text-sm">debsourya</span>
-          )}
-        </Button>
+        <SignedIn>
+          <UserButton
+            afterSignOutUrl="/"
+            appearance={{
+              elements: {
+                rootBox: "w-full",
+                userButtonTrigger: "w-full justify-start h-10 hover:bg-cyan-100 dark:hover:bg-cyan-800/20 p-4 rounded-md dark:text-white text-lg",
+                userButtonBox: "flex flex-row-reverse items-center",
+                userButtonOuterIdentifier: "-ml-1",
+                avatarBox: "h-6 w-6"
+              }
+            }}
+            showName={!isCollapsed}
+          />
+        </SignedIn>
       </div>
     </div>
   );

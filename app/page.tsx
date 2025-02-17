@@ -8,6 +8,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
+import { SignInButton } from "@clerk/nextjs";
 
 export default function LandingPage() {
   const scrollToNextSection = (sectionId: string) => {
@@ -78,11 +79,14 @@ export default function LandingPage() {
             Transform your content interaction experience. Chat with websites, PDFs, and YouTube videos using advanced AI technology.
           </p>
           <div className="flex gap-4 justify-center pt-4">
-            <Button asChild size="lg" className="text-lg px-8 py-6">
-              <Link href="/v1">
-                Get Started <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
+            <SignInButton mode="modal">
+                <Button 
+                    variant="default" size="lg"
+                    className="text-lg px-8 py-6"
+                >
+                    Get Started <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+            </SignInButton>
           </div>
         </motion.div>
         <motion.div

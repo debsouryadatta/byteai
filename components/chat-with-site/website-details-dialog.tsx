@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "lucide-react";
+import { Note } from "@prisma/client";
 
 interface WebsiteDetailsDialogProps {
   showSummary: boolean;
@@ -32,30 +33,10 @@ interface WebsiteDetailsDialogProps {
   setShowNoteDialog: (show: boolean) => void;
   showDeleteAlert: boolean;
   setShowDeleteAlert: (show: boolean) => void;
-  selectedNote: {
-    id: number;
-    name: string;
-    content: string;
-    createdAt: string;
-  } | null;
-  setSelectedNote: (note: {
-    id: number;
-    name: string;
-    content: string;
-    createdAt: string;
-  } | null) => void;
-  noteToDelete: {
-    id: number;
-    name: string;
-    content: string;
-    createdAt: string;
-  } | null;
-  setNoteToDelete: (note: {
-    id: number;
-    name: string;
-    content: string;
-    createdAt: string;
-  } | null) => void;
+  selectedNote: Note | null;
+  setSelectedNote: (note: Note | null) => void;
+  noteToDelete: Note | null;
+  setNoteToDelete: (note: Note | null) => void;
   isEditing: boolean;
   noteForm: {
     name: string;
@@ -63,18 +44,8 @@ interface WebsiteDetailsDialogProps {
   };
   handleNoteSubmit: () => void;
   handleCloseNoteDialog: () => void;
-  handleEditNote: (note: {
-    id: number;
-    name: string;
-    content: string;
-    createdAt: string;
-  }) => void;
-  handleDeleteNote: (note: {
-    id: number;
-    name: string;
-    content: string;
-    createdAt: string;
-  }) => void;
+  handleEditNote: (note: Note) => void;
+  handleDeleteNote: (note: Note) => void;
   confirmDelete: () => void;
   setNoteForm: (form: { name: string; content: string }) => void;
   websiteSummary: string;
@@ -190,10 +161,10 @@ export function WebsiteDetailsDialog({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{selectedNote?.name}</DialogTitle>
+            <DialogTitle>{selectedNote?.title}</DialogTitle>
             <DialogDescription className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              {selectedNote && formatDate(selectedNote.createdAt)}
+              {selectedNote && formatDate(selectedNote.createdAt.toString())}
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="mt-4 h-[300px] rounded-md border p-4">

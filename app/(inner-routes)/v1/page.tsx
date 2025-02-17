@@ -1,5 +1,5 @@
 import Footer from '@/components/footer';
-import { UrlShortener } from '@/components/url-shortener';
+// import { UrlShortener } from '@/components/url-shortener';
 
 export default function Home() {
   return (
@@ -20,7 +20,7 @@ export default function Home() {
             Transform long URLs into memorable, shareable links. Track clicks and manage your links all in one place.
           </p>
         </div>
-        <UrlShortener />
+        {/* <UrlShortener /> */}
       </main>
       <Footer />
     </div>
