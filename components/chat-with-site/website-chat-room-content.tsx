@@ -203,12 +203,12 @@ export default function WebsiteChatRoomContent() {
 
           {/* Input Area */}
           <motion.div
-            className="flex-shrink-0 mt-4 backdrop-blur-sm border-t bg-transparent"
+            className="flex-shrink-0 mt-4 backdrop-blur-sm border-t bg-transparent sticky bottom-0 pb-safe"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8, duration: 0.5 }}
           >
-            <div className="container max-w-4xl mx-auto px-0">
+            <div className="container max-w-4xl mx-auto px-0 pb-4">
               <Card className="p-2 backdrop-blur-sm bg-background/50 border-muted shadow-lg">
                 <form onSubmit={handleSubmit} className="flex items-center space-x-2">
                   <Input
