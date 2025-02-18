@@ -75,7 +75,7 @@ export default function WebsiteChatRoomContent() {
   };
 
   return (
-    <div className="relative min-h-[100dvh] bg-gradient-to-br from-cyan-50 via-cyan-100 to-cyan-50 dark:from-cyan-950 dark:via-black dark:to-cyan-950">
+    <div className="relative h-[100dvh] overflow-hidden bg-gradient-to-br from-cyan-50 via-cyan-100 to-cyan-50 dark:from-cyan-950 dark:via-black dark:to-cyan-950">
       {/* Grid Background Effect */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
       
@@ -112,10 +112,10 @@ export default function WebsiteChatRoomContent() {
         />
       </motion.div>
       
-      <div className="container max-w-4xl mx-auto p-4 relative">
+      <div className="container max-w-4xl mx-auto p-4 relative h-full flex flex-col">
         {/* Header */}
         <motion.div 
-          className="flex items-center space-x-4 mb-6"
+          className="flex items-center space-x-4 mb-6 flex-shrink-0"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -129,11 +129,10 @@ export default function WebsiteChatRoomContent() {
         </motion.div>
 
         {/* Main Chat Area */}
-        <div className="space-y-6">
+        <div className="flex-1 flex flex-col min-h-0">
           {/* Chat Messages Container */}
           <motion.div
-            className="flex-1 space-y-4 mb-20 overflow-y-auto hide-scrollbar"
-            style={{ height: 'calc(100dvh - 12rem)' }}
+            className="flex-1 space-y-4 overflow-y-auto hide-scrollbar pr-2"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
@@ -204,8 +203,7 @@ export default function WebsiteChatRoomContent() {
 
           {/* Input Area */}
           <motion.div
-            className="fixed md:absolute bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm border-t bg-transparent"
-            style={{ width: '100%', maxWidth: '100%' }}
+            className="flex-shrink-0 mt-4 backdrop-blur-sm border-t bg-transparent"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8, duration: 0.5 }}
