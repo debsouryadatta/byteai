@@ -75,7 +75,7 @@ export default function WebsiteChatRoomContent() {
   };
 
   return (
-    <div className="relative h-[100dvh] overflow-hidden bg-gradient-to-br from-cyan-50 via-cyan-100 to-cyan-50 dark:from-cyan-950 dark:via-black dark:to-cyan-950">
+    <div className="flex flex-col min-h-[100dvh] bg-gradient-to-br from-cyan-50 via-cyan-100 to-cyan-50 dark:from-cyan-950 dark:via-black dark:to-cyan-950">
       {/* Grid Background Effect */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
       
@@ -112,10 +112,10 @@ export default function WebsiteChatRoomContent() {
         />
       </motion.div>
       
-      <div className="container max-w-4xl mx-auto p-4 relative h-full flex flex-col">
+      <div className="flex-1 flex flex-col container max-w-4xl mx-auto p-4">
         {/* Header */}
         <motion.div 
-          className="flex items-center space-x-4 mb-6 flex-shrink-0"
+          className="flex items-center space-x-4 mb-6"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -129,10 +129,10 @@ export default function WebsiteChatRoomContent() {
         </motion.div>
 
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col overflow-hidden">
           {/* Chat Messages Container */}
           <motion.div
-            className="flex-1 space-y-4 overflow-y-auto hide-scrollbar pr-2"
+            className="flex-1 space-y-4 overflow-y-auto hide-scrollbar pr-2 pb-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
@@ -191,7 +191,7 @@ export default function WebsiteChatRoomContent() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                className="absolute bottom-24 left-0 right-0 flex justify-center"
+                className="fixed bottom-24 left-0 right-0 flex justify-center"
               >
                 <div className="bg-primary/10 text-primary px-4 py-2 rounded-full flex items-center gap-2 backdrop-blur-sm">
                   <div className="w-4 h-4 border-2 border-primary/50 border-t-primary rounded-full animate-spin" />
@@ -203,40 +203,38 @@ export default function WebsiteChatRoomContent() {
 
           {/* Input Area */}
           <motion.div
-            className="flex-shrink-0 mt-4 backdrop-blur-sm border-t bg-transparent sticky bottom-0 pb-safe"
+            className="mt-4 border-t bg-transparent"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8, duration: 0.5 }}
           >
-            <div className="container max-w-4xl mx-auto px-0 pb-4">
-              <Card className="p-2 backdrop-blur-sm bg-background/50 border-muted shadow-lg">
-                <form onSubmit={handleSubmit} className="flex items-center space-x-2">
-                  <Input
-                    value={input}
-                    onChange={handleInputChange}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Type your message..."
-                    className="flex-1 bg-transparent border-none focus-visible:ring-1 focus-visible:ring-primary/20 placeholder:text-muted-foreground/50"
-                  />
-                  <Button 
-                    type="submit"
-                    size="icon" 
-                    disabled={!hasMessage}
-                    className={cn(
-                      "rounded-full transition-all duration-200",
-                      hasMessage 
-                        ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25" 
-                        : "bg-muted/50 text-muted-foreground cursor-not-allowed"
-                    )}
-                  >
-                    <Send className={cn(
-                      "h-4 w-4 transition-transform",
-                      hasMessage && "translate-x-0.5"
-                    )} />
-                  </Button>
-                </form>
-              </Card>
-            </div>
+            <Card className="p-2 backdrop-blur-sm bg-background/50 border-muted shadow-lg">
+              <form onSubmit={handleSubmit} className="flex items-center space-x-2">
+                <Input
+                  value={input}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Type your message..."
+                  className="flex-1 bg-transparent border-none focus-visible:ring-1 focus-visible:ring-primary/20 placeholder:text-muted-foreground/50"
+                />
+                <Button 
+                  type="submit"
+                  size="icon" 
+                  disabled={!hasMessage}
+                  className={cn(
+                    "rounded-full transition-all duration-200",
+                    hasMessage 
+                      ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25" 
+                      : "bg-muted/50 text-muted-foreground cursor-not-allowed"
+                  )}
+                >
+                  <Send className={cn(
+                    "h-4 w-4 transition-transform",
+                    hasMessage && "translate-x-0.5"
+                  )} />
+                </Button>
+              </form>
+            </Card>
           </motion.div>
         </div>
       </div>
