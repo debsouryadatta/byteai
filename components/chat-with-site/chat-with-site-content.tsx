@@ -247,6 +247,11 @@ export function ChatWithSiteContent() {
               onUpdateName={handleUpdateSiteName}
             />
           ))}
+          {sites.length === 0 && (
+            <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+              No sites found. Upload one to get started!
+            </div>
+          )}
         </motion.div>
       </motion.div>
     </div>

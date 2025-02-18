@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "lucide-react";
+import { Note } from "@prisma/client";
 
 interface PdfDetailsDialogProps {
   showSummary: boolean;
@@ -32,30 +33,10 @@ interface PdfDetailsDialogProps {
   setShowNoteDialog: (show: boolean) => void;
   showDeleteAlert: boolean;
   setShowDeleteAlert: (show: boolean) => void;
-  selectedNote: {
-    id: number;
-    name: string;
-    content: string;
-    createdAt: string;
-  } | null;
-  setSelectedNote: (note: {
-    id: number;
-    name: string;
-    content: string;
-    createdAt: string;
-  } | null) => void;
-  noteToDelete: {
-    id: number;
-    name: string;
-    content: string;
-    createdAt: string;
-  } | null;
-  setNoteToDelete: (note: {
-    id: number;
-    name: string;
-    content: string;
-    createdAt: string;
-  } | null) => void;
+  selectedNote: Note | null;
+  setSelectedNote: (note: Note | null) => void;
+  noteToDelete: Note | null;
+  setNoteToDelete: (note: Note | null) => void;
   isEditing: boolean;
   noteForm: {
     name: string;
@@ -63,18 +44,8 @@ interface PdfDetailsDialogProps {
   };
   handleNoteSubmit: () => void;
   handleCloseNoteDialog: () => void;
-  handleEditNote: (note: {
-    id: number;
-    name: string;
-    content: string;
-    createdAt: string;
-  }) => void;
-  handleDeleteNote: (note: {
-    id: number;
-    name: string;
-    content: string;
-    createdAt: string;
-  }) => void;
+  handleEditNote: (note: Note) => void;
+  handleDeleteNote: (note: Note) => void;
   confirmDelete: () => void;
   setNoteForm: (form: { name: string; content: string }) => void;
   pdfSummary: string;
@@ -190,10 +161,10 @@ export function PdfDetailsDialog({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{selectedNote?.name}</DialogTitle>
+            <DialogTitle>{selectedNote?.title}</DialogTitle>
             <DialogDescription className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              {selectedNote && formatDate(selectedNote.createdAt)}
+              {selectedNote && formatDate(selectedNote.createdAt.toString())}
             </DialogDescription>
           </DialogHeader>
           <ScrollArea className="mt-4 h-[300px] rounded-md border p-4">
@@ -234,10 +205,12 @@ export function PdfDetailsDialog({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setNoteToDelete(null)}>
+            <AlertDialogCancel onClick={() => setShowDeleteAlert(false)}>
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete}>Delete</AlertDialogAction>
+            <AlertDialogAction onClick={confirmDelete}>
+              Delete
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

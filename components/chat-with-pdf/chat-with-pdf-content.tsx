@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
-import { Search, Upload } from "lucide-react";
+import { Search, Upload, X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -14,40 +14,46 @@ import {
 } from "@/components/ui/select";
 import { useRouter } from "next/navigation";
 import { PdfCard } from "./pdf-card";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { toast } from "sonner";
+import { createPdfAction, deletePdfAction, fetchPdfsAction, updatePdfNameAction } from "@/actions/chat-with-pdf";
+import { Pdf } from "@prisma/client";
+import { debounce } from "lodash";
+import { useDropzone } from "react-dropzone";
 
 const MotionCard = motion(Card);
 
-// Format date consistently
-const formatDate = (dateString: string) => {
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  }).format(new Date(dateString));
-};
-
-// Demo data
-const initialPdfs = [
-  {
-    id: 1,
-    name: "Research Paper",
-    originalName: "research_paper_v1.pdf",
-    createdAt: "2024-02-15T12:00:00Z",
-  },
-  {
-    id: 2,
-    name: "Project Documentation",
-    originalName: "project_docs.pdf",
-    createdAt: "2024-02-14T15:30:00Z",
-  },
-];
-
 export function ChatWithPdfContent() {
   const router = useRouter();
-  const [pdfs, setPdfs] = useState(initialPdfs);
+  const [pdfs, setPdfs] = useState<Pdf[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>("newest");
+  const [isUploading, setIsUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    // Only take the last file if multiple files are dropped
+    const file = acceptedFiles[acceptedFiles.length - 1];
+    if (file && file.type === "application/pdf") {
+      setSelectedFile(file);
+    } else {
+      toast.error("Please select a valid PDF file");
+    }
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'application/pdf': ['.pdf']
+    },
+    maxSize: 10 * 1024 * 1024, // 10MB max size
+    multiple: false
+  });
+
+  const handleRemoveFile = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedFile(null);
+  }, []);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -72,53 +78,79 @@ export function ChatWithPdfContent() {
     },
   };
 
-  const handleCardClick = (id: number) => {
+  useEffect(() => {
+    const fetchPdfs = async () => {
+      try {
+        const result = await fetchPdfsAction(sortBy, searchQuery);
+        setPdfs(result);
+      } catch (error) {
+        console.log("Error fetching pdfs:", error);
+      }
+    }
+    fetchPdfs();
+  }, [sortBy, searchQuery])
+
+  const handleCardClick = (id: string) => {
     router.push(`/chat-with-pdf/info/${id}`);
   };
 
   // Handle PDF deletion
-  const handleDeletePdf = (id: number) => {
-    setPdfs((prevPdfs) => prevPdfs.filter((pdf) => pdf.id !== id));
+  const handleDeletePdf = async (id: string) => {
+    try {
+      await deletePdfAction(id);
+      setPdfs((prevPdfs) => prevPdfs.filter((pdf) => pdf.id !== id));
+      toast.success("PDF deleted successfully");
+    } catch (error) {
+      console.log("Error deleting pdf:", error);
+      toast.error("Error deleting pdf");
+    }
   };
 
   // Handle PDF name update
-  const handleUpdatePdfName = (id: number, newName: string) => {
-    setPdfs((prevPdfs) =>
-      prevPdfs.map((pdf) =>
-        pdf.id === id ? { ...pdf, name: newName } : pdf
-      )
-    );
+  const handleUpdatePdfName = async (id: string, newName: string) => {
+    try {
+      await updatePdfNameAction(id, newName);
+      setPdfs((prevPdfs) =>
+        prevPdfs.map((pdf) =>
+          pdf.id === id ? { ...pdf, name: newName } : pdf
+        )
+      );
+      toast.success("PDF name updated successfully");
+    } catch (error) {
+      console.log("Error updating pdf name:", error);
+      toast.error("Error updating pdf name");
+    }
   };
 
-  // Filter and sort PDFs
-  const filteredAndSortedPdfs = useMemo(() => {
-    let result = [...pdfs];
-
-    // Apply search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (pdf) =>
-          pdf.name.toLowerCase().includes(query) ||
-          pdf.originalName.toLowerCase().includes(query)
-      );
+  const createPdf = async () => {
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedFile!);
+      const pdf = await createPdfAction(formData);
+      setPdfs((prevPdfs) => [pdf, ...prevPdfs]);
+      setSelectedFile(null);
+      toast.success("PDF added to the list");
+    } catch (error) {
+      console.log("Error creating pdf:", error);
+      toast.error("Error creating pdf");
+    } finally {
+      setIsUploading(false);
     }
+  }
 
-    // Apply sorting
-    switch (sortBy) {
-      case "newest":
-        result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        break;
-      case "oldest":
-        result.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-        break;
-      case "name":
-        result.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-    }
+  // Create debounced search handler
+  const debouncedSetSearchQuery = useMemo(
+    () => debounce((value: string) => setSearchQuery(value), 300),
+    []
+  );
 
-    return result;
-  }, [pdfs, searchQuery, sortBy]);
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      debouncedSetSearchQuery.cancel();
+    };
+  }, [debouncedSetSearchQuery]);
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-cyan-50 via-cyan-100 to-cyan-50 dark:from-cyan-950 dark:via-black dark:to-cyan-950">
@@ -175,21 +207,60 @@ export function ChatWithPdfContent() {
         </motion.div>
 
         {/* PDF Upload Area */}
-        <motion.div variants={itemVariants} className="max-w-3xl mx-auto">
-          <MotionCard className="p-8 border-2 border-dashed border-gray-300 dark:border-gray-700 bg-white/50 dark:bg-gray-950/50 backdrop-blur-sm">
-            <div className="text-center space-y-4">
-              <Upload className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600" />
-              <div className="text-xl font-semibold text-gray-700 dark:text-gray-300">
-                Drop Your PDF
+        <motion.div variants={itemVariants} className="max-w-md mx-auto space-y-3">
+          <MotionCard>
+            <div
+              {...getRootProps()}
+              className={`p-3 sm:p-5 border-2 border-dashed ${
+                isDragActive 
+                  ? 'border-cyan-500 bg-cyan-50/50 dark:bg-cyan-900/20' 
+                  : 'border-gray-300 dark:border-gray-700 bg-white/50 dark:bg-gray-950/50'
+              } backdrop-blur-sm transition-colors duration-200 cursor-pointer`}
+            >
+              <input {...getInputProps()} />
+              <div className="text-center space-y-2">
+                {selectedFile ? (
+                  <>
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                        <Upload className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <span className="text-sm font-medium truncate max-w-[200px]">
+                        {selectedFile.name}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={handleRemoveFile}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mx-auto h-7 w-7 text-gray-400 dark:text-gray-600" />
+                    <div className="text-base font-semibold text-gray-700 dark:text-gray-300">
+                      {isDragActive ? "Drop your PDF here" : "Drop Your PDF"}
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      or click to select
+                    </p>
+                  </>
+                )}
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                or click to select a file
-              </p>
-              <Button variant="outline">
-                Select PDF
-              </Button>
             </div>
           </MotionCard>
+          <Button 
+            variant="default" 
+            size="sm" 
+            className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white" 
+            disabled={isUploading || !selectedFile}
+            onClick={createPdf}
+          >
+            {isUploading ? "Processing..." : "Submit PDF"}
+          </Button>
         </motion.div>
 
         {/* Search and Sort Section */}
@@ -199,45 +270,46 @@ export function ChatWithPdfContent() {
         >
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 h-4 w-4 z-10" />
-            <div className="relative">
-              <Input
-                placeholder="Search PDFs..."
-                className="pl-10 bg-white/50 dark:bg-gray-950/50 backdrop-blur-sm"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+            <Input
+              className="pl-10 bg-white/50 dark:bg-gray-950/50 backdrop-blur-sm"
+              placeholder="Search PDFs..."
+              onChange={(e) => debouncedSetSearchQuery(e.target.value)}
+            />
           </div>
-          <Select value={sortBy} onValueChange={setSortBy}>
+          <Select
+            value={sortBy}
+            onValueChange={(value) => setSortBy(value)}
+          >
             <SelectTrigger className="w-[180px] bg-white/50 dark:bg-gray-950/50 backdrop-blur-sm">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="newest">Newest First</SelectItem>
-              <SelectItem value="oldest">Oldest First</SelectItem>
+              <SelectItem value="newest">Newest</SelectItem>
+              <SelectItem value="oldest">Oldest</SelectItem>
               <SelectItem value="name">Name</SelectItem>
             </SelectContent>
           </Select>
         </motion.div>
 
-        {/* PDF List */}
+        {/* PDFs Grid */}
         <motion.div
           variants={itemVariants}
-          className="max-w-3xl mx-auto space-y-4"
+          className="max-w-3xl mx-auto grid grid-cols-1 gap-4"
         >
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            List of PDFs
-          </h2>
-          {filteredAndSortedPdfs.map((pdf) => (
+          {pdfs.map((pdf) => (
             <PdfCard
               key={pdf.id}
               pdf={pdf}
               onCardClick={handleCardClick}
-              formatDate={formatDate}
               onDelete={handleDeletePdf}
               onUpdateName={handleUpdatePdfName}
             />
           ))}
+          {pdfs.length === 0 && (
+            <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+              No PDFs found. Upload one to get started!
+            </div>
+          )}
         </motion.div>
       </motion.div>
     </div>

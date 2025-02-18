@@ -15,6 +15,7 @@ import {
 import { useRouter } from "next/navigation";
 import { YtCard } from "./yt-card";
 import { useState, useMemo } from "react";
+import { toast } from "sonner";
 
 const MotionCard = motion(Card);
 
@@ -28,24 +29,24 @@ const formatDate = (dateString: string) => {
 };
 
 // Demo data
-const initialVideos = [
-  {
-    id: 1,
-    name: "React Tutorial",
-    url: "https://youtube.com/watch?v=abc123",
-    createdAt: "2024-02-15T12:00:00Z",
-  },
-  {
-    id: 2,
-    name: "Next.js Crash Course",
-    url: "https://youtube.com/watch?v=xyz789",
-    createdAt: "2024-02-14T15:30:00Z",
-  },
-];
+// const initialVideos = [
+//   {
+//     id: 1,
+//     name: "React Tutorial",
+//     url: "https://youtube.com/watch?v=abc123",
+//     createdAt: "2024-02-15T12:00:00Z",
+//   },
+//   {
+//     id: 2,
+//     name: "Next.js Crash Course",
+//     url: "https://youtube.com/watch?v=xyz789",
+//     createdAt: "2024-02-14T15:30:00Z",
+//   },
+// ];
 
 export function ChatWithYtContent() {
   const router = useRouter();
-  const [videos, setVideos] = useState(initialVideos);
+  const [videos, setVideos] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<string>("");
 
@@ -181,7 +182,7 @@ export function ChatWithYtContent() {
               placeholder="Enter the YouTube video link"
               className="flex-1 bg-white/50 dark:bg-gray-950/50 backdrop-blur-sm"
             />
-            <Button className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white">
+            <Button onClick={() => toast.error("Feature under development!")} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white">
               Submit
             </Button>
           </div>
@@ -231,6 +232,11 @@ export function ChatWithYtContent() {
               />
             </motion.div>
           ))}
+          {videos.length === 0 && (
+            <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+              No videos found. Upload one to get started!
+            </div>
+          )}
         </motion.div>
       </motion.div>
     </div>

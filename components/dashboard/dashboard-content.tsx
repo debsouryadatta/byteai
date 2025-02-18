@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { fetchDashboardDataAction } from "@/actions/dashboard";
+import { useRouter } from "next/navigation";
 
 const MotionCard = motion(Card);
 
 export function DashboardContent() {
+  const router = useRouter();
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -128,16 +130,19 @@ export function DashboardContent() {
               title: "Chat with Site",
               count: dashboardData?.websites,
               description: "Total chats with websites",
+              link: "/chat-with-site",
             },
             {
               title: "Chat with PDF",
               count: dashboardData?.pdfs,
               description: "Total PDF conversations",
+              link: "/chat-with-pdf",
             },
             {
               title: "Chat with YouTube",
               count: dashboardData?.ytVideos,
               description: "Total YouTube conversations",
+              link: "/chat-with-yt",
             },
           ].map((item, index) => (
             <MotionCard
@@ -153,7 +158,7 @@ export function DashboardContent() {
                   {item.title}
                 </CardTitle>
                 <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
-                  <Button variant="ghost" size="icon">
+                  <Button onClick={() => router.push(item.link)} variant="ghost" size="icon">
                     <Plus className="h-4 w-4" />
                   </Button>
                 </motion.div>

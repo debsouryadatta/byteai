@@ -1,4 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
+import { Readable } from "stream";
 
 // Configure cloudinary for image uploads
 cloudinary.config({
@@ -19,4 +20,21 @@ export async function getPhotoUrl(dataUrl: string) {
     console.log(error);
     throw error;
   }
+}
+
+export async function getPdfUrl(buffer: Buffer): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        resource_type: "raw",
+        folder: process.env.CLOUDINARY_FOLDER,
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result!.secure_url);
+      }
+    );
+    
+    Readable.from(buffer).pipe(stream);
+  });
 }

@@ -1,144 +1,16 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { PdfDetailsCard } from "@/components/chat-with-pdf/pdf-details-card";
 import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PdfDetailsDialog } from "@/components/chat-with-pdf/pdf-details-dialog";
-import { PdfDetailsCard } from "@/components/chat-with-pdf/pdf-details-card";
-
-// Demo data
-const pdfData = {
-  name: "Research Paper",
-  url: "https://example.com/research-paper.pdf",
-  createdAt: "2024-02-16T12:00:00Z",
-  summary: `Title: Advanced Machine Learning Techniques in Natural Language Processing
-
-Abstract:
-This research paper explores cutting-edge machine learning techniques applied to natural language processing tasks. We present a comprehensive analysis of recent developments in transformer architectures, attention mechanisms, and their applications in various NLP domains.
-
-Key Findings:
-1. Transformer Architecture Improvements
-   - Enhanced attention mechanisms
-   - Optimized positional encoding
-   - Reduced computational complexity
-
-2. Performance Metrics
-   - BLEU Score: 45.6
-   - ROUGE-L: 38.9
-   - Perplexity: 3.2
-
-3. Application Areas
-   - Machine Translation
-   - Text Summarization
-   - Question Answering
-   - Sentiment Analysis
-
-Methodology:
-• Data Collection
-  - Corpus size: 1M sentences
-  - Languages: 10
-  - Domains: 5
-
-• Model Architecture
-  - Attention layers: 12
-  - Hidden size: 768
-  - Feed-forward size: 3072
-
-• Training Details
-  - Batch size: 32
-  - Learning rate: 1e-4
-  - Epochs: 100
-
-Results Discussion:
-1. Improved accuracy across all tasks
-2. Reduced training time by 40%
-3. Lower memory footprint
-4. Better generalization
-
-Future Directions:
-- Explore sparse attention mechanisms
-- Investigate multilingual capabilities
-- Optimize for edge devices
-- Enhance few-shot learning
-
-Conclusions:
-Our proposed improvements demonstrate significant advances in NLP tasks while maintaining computational efficiency. The results suggest promising directions for future research in the field.`,
-  notes: [
-    {
-      id: 1,
-      name: "Key Findings Analysis",
-      content: `Important observations from the key findings section:
-
-1. Transformer Architecture
-- Notable improvements in attention mechanism efficiency
-- Innovative approach to positional encoding
-- Significant reduction in computational requirements
-- Potential for scaling to larger models
-
-2. Performance Metrics
-- BLEU score shows competitive results
-- ROUGE-L indicates good summary quality
-- Low perplexity suggests strong language modeling
-
-3. Implementation Considerations
-- Architecture choices well-justified
-- Training parameters carefully selected
-- Results reproducible across different datasets
-
-4. Future Applications
-- Promising for industrial applications
-- Scalability looks feasible
-- Cost-effective for production deployment
-
-Follow-up Actions:
-1. Implement baseline model
-2. Compare with existing solutions
-3. Evaluate on custom datasets
-4. Document performance metrics`,
-      createdAt: "2024-02-16T10:00:00Z"
-    },
-    {
-      id: 2,
-      name: "Implementation Notes",
-      content: `Technical implementation details to consider:
-
-1. Model Architecture
-- 12 attention layers optimal for our use case
-- 768 hidden size balances performance and efficiency
-- 3072 feed-forward size provides good capacity
-
-2. Training Configuration
-- Batch size of 32 works well with available GPU memory
-- Learning rate of 1e-4 shows stable convergence
-- 100 epochs sufficient for convergence
-
-3. Resource Requirements
-- GPU: NVIDIA A100 or similar
-- Memory: 32GB minimum
-- Storage: 500GB for dataset and checkpoints
-
-4. Optimization Strategies
-- Gradient accumulation for larger effective batch sizes
-- Mixed precision training
-- Gradient checkpointing for memory efficiency
-
-5. Monitoring Setup
-- TensorBoard for training metrics
-- WandB for experiment tracking
-- Custom logging for system metrics
-
-Next Steps:
-1. Set up development environment
-2. Prepare data pipeline
-3. Implement training loop
-4. Set up monitoring tools`,
-      createdAt: "2024-02-15T14:30:00Z"
-    },
-  ]
-};
+import { Note, Pdf } from "@prisma/client";
+import { addPdfNoteAction, deletePdfNoteAction, fetchPdfByIdAction, fetchPdfNotesAction, updatePdfNoteAction } from "@/actions/chat-with-pdf";
+import { useParams } from 'next/navigation'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -165,17 +37,50 @@ const itemVariants = {
 };
 
 export default function PdfDetailsContent() {
+  const params = useParams();
+  const pdfId = (params as { pdfId: string }).pdfId;
+  
   const router = useRouter();
+  const [pdfData, setPdfData] = useState<Pdf | null>(null);
+  const [notes, setNotes] = useState<Note[]>([]);
   const [showSummary, setShowSummary] = useState(false);
-  const [selectedNote, setSelectedNote] = useState<(typeof pdfData.notes)[0] | null>(null);
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [showNoteDialog, setShowNoteDialog] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
-  const [noteToDelete, setNoteToDelete] = useState<(typeof pdfData.notes)[0] | null>(null);
+  const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
   const [noteForm, setNoteForm] = useState({
     name: "",
     content: ""
   });
+
+  useEffect(() => {
+    const fetchPdfById = async () => {
+      try {
+        const pdf = await fetchPdfByIdAction(pdfId);
+        if (!pdf) {
+          router.push("/chat-with-pdf");
+          return;
+        }
+        setPdfData(pdf);
+      } catch (error) {
+        console.log("Error fetching pdf:", error);
+      }
+    }
+
+    const fetchPdfNotes = async () => {
+      try {
+        const notes = await fetchPdfNotesAction(pdfId);
+        setNotes(notes);
+        console.log("Notes:", notes);
+      } catch (error) {
+        console.log("Error fetching pdf notes:", error);
+      }
+    }
+    fetchPdfById();
+    fetchPdfNotes();
+  }, [pdfId])
+  
 
   const handleCloseNoteDialog = () => {
     setShowNoteDialog(false);
@@ -186,60 +91,64 @@ export default function PdfDetailsContent() {
     setNoteForm({ name: "", content: "" });
   };
 
-  const handleEditNote = (note: typeof selectedNote) => {
+  const handleEditNote = (note: Note | null) => {
     if (!note) return;
     setIsEditing(true);
     setSelectedNote(note);
     setNoteForm({
-      name: note.name,
-      content: note.content
+      name: note.title!,
+      content: note.content!
     });
     setShowNoteDialog(true);
   };
 
-  const handleDeleteNote = (note: typeof selectedNote) => {
+  const handleDeleteNote = (note: Note | null) => {
     if (!note) return;
     setNoteToDelete(note);
     setShowDeleteAlert(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!noteToDelete) return;
     
-    pdfData.notes = pdfData.notes.filter(note => note.id !== noteToDelete.id);
-    toast.success("Note deleted successfully!");
-    setShowDeleteAlert(false);
-    setNoteToDelete(null);
-    setSelectedNote(null);
+    try {
+      await deletePdfNoteAction(noteToDelete.id);
+      setNotes(notes.filter(note => note.id !== noteToDelete.id));
+      toast.success("Note deleted successfully!");
+      setShowDeleteAlert(false);
+      setNoteToDelete(null);
+      setSelectedNote(null);
+    } catch (error) {
+      console.error("Error deleting note:", error);
+      toast.error("Failed to delete note");
+    }
   };
 
-  const handleNoteSubmit = () => {
+  const handleNoteSubmit = async () => {
     if (!noteForm.name || !noteForm.content) {
       toast.error("Please fill in all fields");
       return;
     }
 
-    if (isEditing && selectedNote) {
-      // Update existing note
-      pdfData.notes = pdfData.notes.map(note => 
-        note.id === selectedNote.id 
-          ? { ...note, name: noteForm.name, content: noteForm.content }
-          : note
-      );
-      toast.success("Note updated successfully!");
-    } else {
-      // Add new note
-      const newNote = {
-        id: Date.now(),
-        name: noteForm.name,
-        content: noteForm.content,
-        createdAt: new Date().toISOString()
-      };
-      pdfData.notes.unshift(newNote);
-      toast.success("Note added successfully!");
+    try {
+      if (isEditing && selectedNote) {
+        // Update existing note
+        const updatedNote = await updatePdfNoteAction(selectedNote.id, noteForm.name, noteForm.content);
+        setNotes(notes.map(note => 
+          note.id === selectedNote.id ? updatedNote : note
+        ));
+        toast.success("Note updated successfully!");
+      } else {
+        // Add new note
+        const note = await addPdfNoteAction(pdfId, noteForm.name, noteForm.content);
+        setNotes([note, ...notes]);
+        toast.success("Note added successfully!");
+      }
+      handleCloseNoteDialog();
+    } catch (error) {
+      console.error("Error saving note:", error);
+      toast.error("Failed to save note");
     }
-
-    handleCloseNoteDialog();
   };
 
   const formatDate = (date: string) => {
@@ -293,52 +202,55 @@ export default function PdfDetailsContent() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => router.back()}
-            className="hover:bg-secondary/80 transition-colors duration-300"
+            onClick={() => router.push("/chat-with-pdf")}
+            className="hover:bg-white/50 dark:hover:bg-gray-800/50"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-800 via-gray-900 to-black dark:from-white dark:via-zinc-300 dark:to-zinc-500 bg-clip-text text-transparent">
-            {pdfData.name}
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 via-gray-900 to-black dark:from-white dark:via-zinc-300 dark:to-zinc-500 bg-clip-text text-transparent">
+            {pdfData?.name}
           </h1>
         </motion.div>
 
-        {/* PDF Details Card with Notes */}
-        <motion.div variants={itemVariants}>
-          <PdfDetailsCard 
-            pdfData={pdfData}
-            setShowSummary={setShowSummary}
-            setShowNoteDialog={setShowNoteDialog}
-            setSelectedNote={setSelectedNote}
-            handleEditNote={handleEditNote}
-            handleDeleteNote={handleDeleteNote}
-            formatDate={formatDate}
-          />
-        </motion.div>
-      </motion.div>
+        {/* Main content */}
+        {pdfData && (
+          <motion.div variants={itemVariants}>
+            <PdfDetailsCard
+              pdfData={pdfData}
+              setShowSummary={setShowSummary}
+              setShowNoteDialog={setShowNoteDialog}
+              setSelectedNote={setSelectedNote}
+              handleEditNote={handleEditNote}
+              handleDeleteNote={handleDeleteNote}
+              notes={notes}
+            />
+          </motion.div>
+        )}
 
-      <PdfDetailsDialog 
-        showSummary={showSummary}
-        setShowSummary={setShowSummary}
-        showNoteDialog={showNoteDialog}
-        setShowNoteDialog={setShowNoteDialog}
-        showDeleteAlert={showDeleteAlert}
-        setShowDeleteAlert={setShowDeleteAlert}
-        selectedNote={selectedNote}
-        setSelectedNote={setSelectedNote}
-        noteToDelete={noteToDelete}
-        setNoteToDelete={setNoteToDelete}
-        isEditing={isEditing}
-        noteForm={noteForm}
-        handleNoteSubmit={handleNoteSubmit}
-        handleCloseNoteDialog={handleCloseNoteDialog}
-        handleEditNote={handleEditNote}
-        handleDeleteNote={handleDeleteNote}
-        confirmDelete={confirmDelete}
-        setNoteForm={setNoteForm}
-        pdfSummary={pdfData.summary}
-        formatDate={formatDate}
-      />
+        {/* Dialogs */}
+        <PdfDetailsDialog
+          showSummary={showSummary}
+          setShowSummary={setShowSummary}
+          showNoteDialog={showNoteDialog}
+          setShowNoteDialog={setShowNoteDialog}
+          showDeleteAlert={showDeleteAlert}
+          setShowDeleteAlert={setShowDeleteAlert}
+          selectedNote={selectedNote}
+          setSelectedNote={setSelectedNote}
+          noteToDelete={noteToDelete}
+          setNoteToDelete={setNoteToDelete}
+          isEditing={isEditing}
+          noteForm={noteForm}
+          handleNoteSubmit={handleNoteSubmit}
+          handleCloseNoteDialog={handleCloseNoteDialog}
+          handleEditNote={handleEditNote}
+          handleDeleteNote={handleDeleteNote}
+          confirmDelete={confirmDelete}
+          setNoteForm={setNoteForm}
+          pdfSummary={pdfData?.pdfSummary || ""}
+          formatDate={formatDate}
+        />
+      </motion.div>
     </div>
   );
 }

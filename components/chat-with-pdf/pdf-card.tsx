@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Pdf } from "@prisma/client";
 import { motion } from "framer-motion";
 import { FileText, Pencil, Check, X, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -11,32 +12,24 @@ import { toast } from "sonner";
 const MotionCard = motion(Card);
 
 interface PdfCardProps {
-  pdf: {
-    id: number;
-    name: string;
-    originalName: string;
-    createdAt: string;
-  };
-  onCardClick: (id: number) => void;
-  formatDate: (date: string) => string;
-  onDelete: (id: number) => void;
-  onUpdateName: (id: number, newName: string) => void;
+  pdf: Pdf;
+  onCardClick: (id: string) => void;
+  onDelete: (id: string) => void;
+  onUpdateName: (id: string, newName: string) => void;
 }
 
 export function PdfCard({
   pdf,
   onCardClick,
-  formatDate,
   onDelete,
   onUpdateName,
 }: PdfCardProps) {
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     onDelete(pdf.id);
-    toast.success("PDF deleted successfully");
   };
 
   const startEditing = (e: React.MouseEvent, currentName: string) => {
@@ -49,7 +42,6 @@ export function PdfCard({
     e.stopPropagation();
     if (editName.trim()) {
       onUpdateName(pdf.id, editName.trim());
-      toast.success("PDF name updated successfully");
       setEditingId(null);
     }
   };
@@ -106,7 +98,7 @@ export function PdfCard({
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 text-gray-500"
-                onClick={(e) => startEditing(e, pdf.name)}
+                onClick={(e) => startEditing(e, pdf.name ?? "")}
               >
                 <Pencil className="h-4 w-4" />
               </Button>
@@ -127,7 +119,7 @@ export function PdfCard({
       </CardHeader>
       <CardContent className="px-4 pb-4 pt-0">
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Created at: {formatDate(pdf.createdAt)}
+          Created on: {new Date(pdf.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
         </p>
       </CardContent>
     </MotionCard>

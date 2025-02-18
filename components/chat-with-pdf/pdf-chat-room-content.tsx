@@ -7,36 +7,39 @@ import { ArrowLeft, Send, Bot, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { useState, useRef, useEffect } from "react";
-
-type Message = {
-  role: "assistant" | "user";
-  content: string;
-  id: string;
-};
-
-const demoMessages: Message[] = [
-  {
-    role: "assistant",
-    content: "Hello! I'm ready to help you explore and understand the website content. What would you like to know?",
-    id: "1",
-  },
-  {
-    role: "user",
-    content: "What are the main features of this website?",
-    id: "2",
-  },
-  {
-    role: "assistant",
-    content: "This website offers several key features:\n\n1. Product catalog with detailed descriptions\n2. User reviews and ratings\n3. Secure checkout process\n4. Customer support system\n\nWould you like me to explain any of these features in more detail?",
-    id: "3",
-  },
-];
+import { useRef, useEffect, useState } from "react";
+import { useChat } from '@ai-sdk/react';
+import { useParams } from 'next/navigation'
+import { fetchPdfMessagesAction, updatePdfMessagesAction } from "@/actions/chat-with-pdf";
+import { toast } from "sonner";
+import { generateId } from "ai";
 
 export default function PdfChatRoomContent() {
-  const [messages, setMessages] = useState<Message[]>(demoMessages);
-  const [message, setMessage] = useState("");
-  const hasMessage = message.trim().length > 0;
+  const params = useParams();
+  const pdfId = (params as { pdfId: string }).pdfId;
+  const [messagesFromDb, setMessagesFromDb] = useState<any[]>([]);
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+    initialMessages: [
+      {
+        role: "assistant",
+        content: "Hello! I'm ready to help you explore and understand the PDF content. What would you like to know?",
+        id: "1",
+      },
+      ...(messagesFromDb.length > 0 ? messagesFromDb : []),
+    ],
+    api: "/api/chat/pdf",
+    onFinish: async (message, options) => {
+      try {
+        const inputMessage = { id: generateId(), role: "user", content: input };
+        const aiMessage = { id: message.id, role: "assistant", content: message.content }
+        await updatePdfMessagesAction(pdfId, [...messagesFromDb, inputMessage, aiMessage]);
+        setMessagesFromDb([...messagesFromDb, inputMessage, aiMessage]); 
+      } catch (error) {
+        console.log("Error updating pdf messages:", error);
+        toast.error("Error updating pdf messages");
+      }
+    },
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -44,37 +47,33 @@ export default function PdfChatRoomContent() {
   };
 
   useEffect(() => {
+    const fetchPdfMessages = async () => {
+     try {
+        const messages = await fetchPdfMessagesAction(pdfId);
+        setMessagesFromDb(messages);
+     } catch (error) {
+        console.log("Error fetching pdf messages:", error);
+     } 
+    }
+    fetchPdfMessages();
+  }, [pdfId]);
+
+  useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSubmit = () => {
-    if (!hasMessage) return;
-
-    const newMessage: Message = {
-      role: "user",
-      content: message.trim(),
-      id: Date.now().toString(),
-    };
-
-    setMessages((prev) => [...prev, newMessage]);
-
-    // Simulate assistant response
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        role: "assistant",
-        content: "I understand your message. This is a simulated response. In the actual implementation, this will be replaced with the real AI response.",
-        id: (Date.now() + 1).toString(),
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-    }, 1000);
-
-    setMessage("");
-  };
+  const hasMessage = input.trim().length > 0;
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey && hasMessage) {
       e.preventDefault();
-      handleSubmit();
+      const chatRequestOptions = {
+        body: {
+          pdfId: pdfId,
+          // any other data you want to send
+        }
+      };
+      handleSubmit(e as any, chatRequestOptions);
     }
   };
 
@@ -124,7 +123,7 @@ export default function PdfChatRoomContent() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Link href={`/chat-with-pdf/info/${1}`}>
+          <Link href={`/chat-with-pdf/info/${pdfId}`}>
             <Button variant="ghost" size="icon" className="rounded-full hover:bg-background/80 transition-colors">
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -188,6 +187,23 @@ export default function PdfChatRoomContent() {
             <div ref={messagesEndRef} />
           </motion.div>
 
+          {/* Thinking Animation */}
+          <AnimatePresence>
+            {isLoading && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="absolute bottom-24 left-0 right-0 flex justify-center"
+              >
+                <div className="bg-primary/10 text-primary px-4 py-2 rounded-full flex items-center gap-2 backdrop-blur-sm">
+                  <div className="w-4 h-4 border-2 border-primary/50 border-t-primary rounded-full animate-spin" />
+                  <span className="text-sm font-medium">Thinking...</span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Input Area */}
           <motion.div
             className="fixed bottom-6 left-4 -right-16 md:left-auto md:right-auto md:w-[calc(100%-32px)] md:max-w-4xl mx-auto w-[calc(100%-120px)]"
@@ -196,10 +212,18 @@ export default function PdfChatRoomContent() {
             transition={{ delay: 0.8, duration: 0.5 }}
           >
             <Card className="p-2 backdrop-blur-sm bg-background/50 border-muted shadow-lg">
-              <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="flex items-center space-x-2">
+              <form onSubmit={(e) => { 
+                e.preventDefault(); 
+                const chatRequestOptions = {
+                  body: {
+                    pdfId: pdfId,
+                  }
+                };
+                handleSubmit(e, chatRequestOptions); 
+              }} className="flex items-center space-x-2">
                 <Input
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  value={input}
+                  onChange={handleInputChange}
                   onKeyDown={handleKeyDown}
                   placeholder="Type your message..."
                   className="flex-1 bg-transparent border-none focus-visible:ring-1 focus-visible:ring-primary/20 placeholder:text-muted-foreground/50"
@@ -207,17 +231,17 @@ export default function PdfChatRoomContent() {
                 <Button 
                   type="submit"
                   size="icon" 
-                  disabled={!hasMessage}
+                  disabled={!hasMessage || isLoading}
                   className={cn(
                     "rounded-full transition-all duration-200",
-                    hasMessage 
+                    hasMessage && !isLoading
                       ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25" 
                       : "bg-muted/50 text-muted-foreground cursor-not-allowed"
                   )}
                 >
                   <Send className={cn(
                     "h-4 w-4 transition-transform",
-                    hasMessage && "translate-x-0.5"
+                    hasMessage && !isLoading && "translate-x-0.5"
                   )} />
                 </Button>
               </form>
