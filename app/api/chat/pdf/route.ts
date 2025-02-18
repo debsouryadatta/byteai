@@ -5,6 +5,8 @@ import { streamText } from 'ai';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
+// Add at the top of your API route file
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   let { messages, pdfId } = await req.json();
