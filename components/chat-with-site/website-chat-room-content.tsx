@@ -28,6 +28,9 @@ export default function WebsiteChatRoomContent() {
       ...(messagesFromDb.length > 0 ? messagesFromDb : []),
     ],
     api: "/api/chat/site",
+    body: {
+      websiteId: websiteId,
+    },
     onFinish: async (message, options) => {
       try {
         const inputMessage = { id: generateId(), role: "user", content: input };
@@ -67,18 +70,12 @@ export default function WebsiteChatRoomContent() {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey && hasMessage) {
       e.preventDefault();
-      const chatRequestOptions = {
-        body: {
-          websiteId: websiteId,
-          // any other data you want to send
-        }
-      };
-      handleSubmit(e as any, chatRequestOptions);
+      handleSubmit(e as any);
     }
   };
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-cyan-50 via-cyan-100 to-cyan-50 dark:from-cyan-950 dark:via-black dark:to-cyan-950">
+    <div className="relative min-h-[100dvh] bg-gradient-to-br from-cyan-50 via-cyan-100 to-cyan-50 dark:from-cyan-950 dark:via-black dark:to-cyan-950">
       {/* Grid Background Effect */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
       
@@ -135,7 +132,8 @@ export default function WebsiteChatRoomContent() {
         <div className="space-y-6">
           {/* Chat Messages Container */}
           <motion.div
-            className="flex-1 space-y-4 min-h-[calc(100vh-16rem)] pb-24 overflow-y-auto"
+            className="flex-1 space-y-4 mb-20 overflow-y-auto hide-scrollbar"
+            style={{ height: 'calc(100dvh - 12rem)' }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
@@ -206,38 +204,41 @@ export default function WebsiteChatRoomContent() {
 
           {/* Input Area */}
           <motion.div
-            className="fixed bottom-6 left-4 right-4 md:left-auto md:right-auto md:w-[calc(100%-32px)] md:max-w-4xl mx-auto"
+            className="fixed md:absolute bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm border-t bg-transparent"
+            style={{ width: '100%', maxWidth: '100%' }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8, duration: 0.5 }}
           >
-            <Card className="p-2 backdrop-blur-sm bg-background/50 border-muted shadow-lg">
-              <form onSubmit={handleSubmit} className="flex items-center space-x-2">
-                <Input
-                  value={input}
-                  onChange={handleInputChange}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Type your message..."
-                  className="flex-1 bg-transparent border-none focus-visible:ring-1 focus-visible:ring-primary/20 placeholder:text-muted-foreground/50"
-                />
-                <Button 
-                  type="submit"
-                  size="icon" 
-                  disabled={!hasMessage}
-                  className={cn(
-                    "rounded-full transition-all duration-200",
-                    hasMessage 
-                      ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25" 
-                      : "bg-muted/50 text-muted-foreground cursor-not-allowed"
-                  )}
-                >
-                  <Send className={cn(
-                    "h-4 w-4 transition-transform",
-                    hasMessage && "translate-x-0.5"
-                  )} />
-                </Button>
-              </form>
-            </Card>
+            <div className="container max-w-4xl mx-auto px-0">
+              <Card className="p-2 backdrop-blur-sm bg-background/50 border-muted shadow-lg">
+                <form onSubmit={handleSubmit} className="flex items-center space-x-2">
+                  <Input
+                    value={input}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Type your message..."
+                    className="flex-1 bg-transparent border-none focus-visible:ring-1 focus-visible:ring-primary/20 placeholder:text-muted-foreground/50"
+                  />
+                  <Button 
+                    type="submit"
+                    size="icon" 
+                    disabled={!hasMessage}
+                    className={cn(
+                      "rounded-full transition-all duration-200",
+                      hasMessage 
+                        ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25" 
+                        : "bg-muted/50 text-muted-foreground cursor-not-allowed"
+                    )}
+                  >
+                    <Send className={cn(
+                      "h-4 w-4 transition-transform",
+                      hasMessage && "translate-x-0.5"
+                    )} />
+                  </Button>
+                </form>
+              </Card>
+            </div>
           </motion.div>
         </div>
       </div>
