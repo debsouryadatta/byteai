@@ -110,6 +110,7 @@ export function ChatWithSiteContent() {
     try {
       const website = await createWebsiteAction(url);
       console.log("Website created:", website);
+      setSites((prevSites) => [website, ...prevSites]);
       toast.success("Site added to the list");
       setUrl("");
     } catch (error) {

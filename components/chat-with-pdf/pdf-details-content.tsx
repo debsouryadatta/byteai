@@ -198,16 +198,16 @@ export default function PdfDetailsContent() {
         className="container relative mx-auto px-4 py-12 max-w-5xl space-y-8"
       >
         {/* Header with back button */}
-        <motion.div variants={itemVariants} className="flex items-center gap-4 mb-8">
+        <motion.div variants={itemVariants} className="flex items-center gap-2 md:gap-4 mb-6 md:mb-8 overflow-hidden">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => router.push("/chat-with-pdf")}
-            className="hover:bg-white/50 dark:hover:bg-gray-800/50"
+            className="hover:bg-white/50 dark:hover:bg-gray-800/50 shrink-0"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
           </Button>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-800 via-gray-900 to-black dark:from-white dark:via-zinc-300 dark:to-zinc-500 bg-clip-text text-transparent">
+          <h1 className="text-xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-800 via-gray-900 to-black dark:from-white dark:via-zinc-300 dark:to-zinc-500 bg-clip-text text-transparent truncate">
             {pdfData?.name}
           </h1>
         </motion.div>

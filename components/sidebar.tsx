@@ -68,80 +68,72 @@ export function Sidebar({ className }: SidebarProps) {
     },
   ];
 
-  const SidebarContent = () => (
-    <>
-      <div className={cn(
-        "border-b border-b-cyan-100 dark:border-b-cyan-900/30 h-14"
-      )}>
-        <div className="h-14 flex items-center px-4">
-          <h1 className="text-xl font-semibold tracking-tight">
-            ByteAI
-          </h1>
-        </div>
-      </div>
-
-      <ScrollArea className="flex-1 px-2">
-        <div className="flex flex-col gap-2 py-2">
-          {routes.map((route) => (
-            <Link 
-              key={route.href} 
-              href={route.href}
-              onClick={() => isMobile && setIsOpen(false)}
-            >
-              <Button
-                variant={pathname === route.href ? "secondary" : "ghost"}
-                className={cn(
-                  "w-full justify-start h-10",
-                  pathname === route.href 
-                    ? "bg-cyan-100 hover:bg-cyan-200 dark:bg-cyan-800/20 dark:hover:bg-cyan-800/30" 
-                    : "hover:bg-cyan-100 dark:hover:bg-cyan-800/20"
-                )}
-              >
-                <route.icon className="h-4 w-4" />
-                <span className="ml-2 text-sm">{route.label}</span>
-              </Button>
-            </Link>
-          ))}
-        </div>
-      </ScrollArea>
-
-      <div className="flex flex-col gap-2 p-2 border-t border-t-cyan-100 dark:border-t-cyan-900/30">
-        <ThemeToggle isCollapsed={false} />
-        <SignedIn>
-          <UserButton
-            afterSignOutUrl="/"
-            appearance={{
-              elements: {
-                rootBox: "w-full",
-                userButtonTrigger: "w-full justify-start h-10 hover:bg-cyan-100 dark:hover:bg-cyan-800/20 p-4 rounded-md dark:text-white text-lg",
-                userButtonBox: "flex flex-row-reverse items-center",
-                userButtonOuterIdentifier: "-ml-1",
-                avatarBox: "h-6 w-6"
-              }
-            }}
-            showName
-          />
-        </SignedIn>
-      </div>
-    </>
-  );
-
   // Mobile view
   if (isMobile) {
     return (
       <>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden fixed top-4 right-4 z-40 hover:bg-cyan-100 dark:hover:bg-cyan-800/20"
-          onClick={() => setIsOpen(true)}
-        >
-          <Menu className="h-4 w-4" />
-        </Button>
+        <div className="md:hidden fixed top-4 right-4 z-40 flex items-center gap-2">
+          <SignedIn>
+            <UserButton
+              afterSignOutUrl="/"
+              appearance={{
+                elements: {
+                  userButtonTrigger: "h-8 w-8 hover:bg-cyan-100 dark:hover:bg-cyan-800/20 rounded-md",
+                  avatarBox: "h-6 w-6"
+                }
+              }}
+            />
+          </SignedIn>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hover:bg-cyan-100 dark:hover:bg-cyan-800/20"
+            onClick={() => setIsOpen(true)}
+          >
+            <Menu className="h-4 w-4" />
+          </Button>
+        </div>
 
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetContent side="right" className="p-0 w-[240px] bg-cyan-50 dark:bg-[#050A09]">
-            <SidebarContent />
+            <div className={cn(
+              "border-b border-b-cyan-100 dark:border-b-cyan-900/30 h-14"
+            )}>
+              <div className="h-14 flex items-center px-4">
+                <h1 className="text-xl font-semibold tracking-tight">
+                  ByteAI
+                </h1>
+              </div>
+            </div>
+
+            <ScrollArea className="flex-1 px-2">
+              <div className="flex flex-col gap-2 py-2">
+                {routes.map((route) => (
+                  <Link 
+                    key={route.href} 
+                    href={route.href}
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <Button
+                      variant={pathname === route.href ? "secondary" : "ghost"}
+                      className={cn(
+                        "w-full justify-start h-10",
+                        pathname === route.href 
+                          ? "bg-cyan-100 hover:bg-cyan-200 dark:bg-cyan-800/20 dark:hover:bg-cyan-800/30" 
+                          : "hover:bg-cyan-100 dark:hover:bg-cyan-800/20"
+                      )}
+                    >
+                      <route.icon className="h-4 w-4" />
+                      <span className="ml-2 text-sm">{route.label}</span>
+                    </Button>
+                  </Link>
+                ))}
+              </div>
+            </ScrollArea>
+
+            <div className="flex flex-col gap-2 p-2 border-t border-t-cyan-100 dark:border-t-cyan-900/30">
+              <ThemeToggle isCollapsed={false} />
+            </div>
           </SheetContent>
         </Sheet>
       </>
