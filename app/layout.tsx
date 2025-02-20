@@ -8,34 +8,34 @@ import { ClerkProvider } from "@clerk/nextjs";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "ByteUrl",
-  description: "Smart URL Shortener with AI-Powered Features",
+  title: "ByteAI",
+  description: "AI-powered Chat with Any Content",
   openGraph: {
     type: "website",
-    title: "ByteUrl",
-    description: "Smart URL Shortener with AI-Powered Features",
-    url: "https://byteurl-eight.vercel.app/",
-    siteName: "ByteUrl",
+    title: "ByteAI",
+    description: "AI-powered Chat with Any Content",
+    url: "https://byteai.souryax.tech/",
+    siteName: "ByteAI",
     images: [{
-      url: "https://res.cloudinary.com/diyxwdtjd/image/upload/v1739300258/projects/byte_url.png",
+      url: "https://res.cloudinary.com/diyxwdtjd/image/upload/v1740058550/projects/byteai.png",
       width: 1200,
       height: 630,
-      alt: "ByteUrl Preview Image",
+      alt: "ByteAI Preview Image",
     }],
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "ByteUrl",
-    description: "Smart URL Shortener with AI-Powered Features",
-    site: "https://byteurl-eight.vercel.app/",
+    title: "ByteAI",
+    description: "AI-powered Chat with Any Content",
+    site: "https://byteai.souryax.tech/",
     images: [{
-      url: "https://res.cloudinary.com/diyxwdtjd/image/upload/v1739300258/projects/byte_url.png",
-      alt: "ByteUrl Preview Image",
+      url: "https://res.cloudinary.com/diyxwdtjd/image/upload/v1740058550/projects/byteai.png",
+      alt: "ByteAI Preview Image",
     }],
   },
   icons: {
-    shortcut: "https://res.cloudinary.com/diyxwdtjd/image/upload/v1739300258/projects/byte_url.png",
+    shortcut: "https://res.cloudinary.com/diyxwdtjd/image/upload/v1740058550/projects/byteai.png",
   }
 };
 

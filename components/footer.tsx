@@ -4,7 +4,7 @@ import Link from 'next/link'
 export default function Footer() {
     return (
         <footer className="absolute bottom-0 left-0 right-0 py-4 backdrop-blur-md bg-white/30 dark:bg-black/30">
-            <Link target='_blank' href="https://github.com/debsouryadatta/byteurl" className="container mx-auto flex justify-center items-center space-x-2 hover:text-gray-900 dark:hover:text-white cursor-pointer hover:animate-pulse">
+            <Link target='_blank' href="https://github.com/debsouryadatta/byteai" className="container mx-auto flex justify-center items-center space-x-2 hover:text-gray-900 dark:hover:text-white cursor-pointer hover:animate-pulse">
                 <Star className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                 <span className="text-gray-600 dark:text-gray-400">Give it a star on</span>
                 <div

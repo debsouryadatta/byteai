@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Footer from "@/components/footer";
-import { ArrowRight, Bot, FileText, Youtube, Zap, ChevronDown } from "lucide-react";
+import { ArrowRight, Bot, FileText, Youtube, Zap, ChevronDown, Github } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -39,7 +39,7 @@ export default function LandingPage() {
             <div className="text-xl font-semibold text-gray-900 dark:text-gray-100">
               ByteAI
             </div>
-            <div className="hidden md:flex items-center space-x-8">
+            <div className="hidden md:flex items-center space-x-8 md:ml-16">
               {[
                 { name: "Home", id: "hero" },
                 { name: "Features", id: "features" },
@@ -56,6 +56,9 @@ export default function LandingPage() {
             </div>
             <div className="flex items-center space-x-4">
               <ThemeToggle />
+              <Link href="https://github.com/debsouryadatta/byteai" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 transition-colors">
+                <Github className="h-5 w-5 -ml-4" />
+              </Link>
             </div>
           </div>
         </div>
