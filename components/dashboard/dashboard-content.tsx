@@ -47,15 +47,6 @@ export function DashboardContent() {
     },
   };
 
-  const buttonVariants = {
-    hover: {
-      scale: 1.1,
-      rotate: 90,
-      transition: { duration: 0.2 },
-    },
-    tap: { scale: 0.95 },
-  };
-
   const [dashboardData, setDashboardData] = useState({
     websites: 0,
     pdfs: 0,
@@ -147,21 +138,20 @@ export function DashboardContent() {
           ].map((item, index) => (
             <MotionCard
               key={index}
-              className="bg-white/50 dark:bg-gray-950/50 backdrop-blur-sm transition-colors hover:bg-white/60 dark:hover:bg-gray-900/60"
+              className="bg-white/50 dark:bg-gray-950/50 backdrop-blur-sm transition-colors hover:bg-white/60 dark:hover:bg-gray-900/60 cursor-pointer"
               variants={cardVariants}
               whileHover={{ y: -5 }}
               initial="hidden"
               animate="visible"
+              onClick={() => router.push(item.link)}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
                   {item.title}
                 </CardTitle>
-                <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
-                  <Button onClick={() => router.push(item.link)} variant="ghost" size="icon">
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </motion.div>
+                <Button variant="ghost" size="icon">
+                  <Plus className="h-4 w-4" />
+                </Button>
               </CardHeader>
               <CardContent>
                 <motion.div variants={statsVariants}>

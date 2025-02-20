@@ -11,6 +11,7 @@ import { WebsiteDetailsDialog } from "@/components/chat-with-site/website-detail
 import { Note, Website } from "@prisma/client";
 import { addWebsiteNoteAction, deleteWebsiteNoteAction, fetchWebsiteByIdAction, fetchWebsitesNotesAction, updateWebsiteNoteAction } from "@/actions/chat-with-site";
 import { useParams } from 'next/navigation'
+import LoadingComponent from "@/app/(inner-routes)/loading";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -53,32 +54,30 @@ export default function WebsiteDetailsContent() {
     name: "",
     content: ""
   });
+  const [fetchingData, setFetchingData] = useState(false);
 
   useEffect(() => {
-    const fetchWebsiteById = async () => {
-      try {
-        const website = await fetchWebsiteByIdAction(websiteId);
-        if (!website) {
-          router.push("/chat-with-site");
-          return;
-        }
-        setWebsiteData(website);
-      } catch (error) {
-        console.log("Error fetching website:", error);
+  const fetchWebsiteDataAndNotes = async () => {
+    try {
+      setFetchingData(true);
+      const [website, notes] = await Promise.all([
+        fetchWebsiteByIdAction(websiteId),
+        fetchWebsitesNotesAction(websiteId)
+      ]);
+      if (!website) {
+        router.push("/chat-with-site");
+        return;
       }
+      setWebsiteData(website);
+      setNotes(notes);
+      console.log("Notes:", notes);
+    } catch (error) {
+      console.log("Error fetching website data:", error);
+    } finally {
+      setFetchingData(false);
     }
-
-    const fetchWebsitesNotes = async () => {
-      try {
-        const notes = await fetchWebsitesNotesAction(websiteId);
-        setNotes(notes);
-        console.log("Notes:", notes);
-      } catch (error) {
-        console.log("Error fetching website notes:", error);
-      }
-    }
-    fetchWebsiteById();
-    fetchWebsitesNotes();
+};
+fetchWebsiteDataAndNotes();
   }, [websiteId])
   
 
@@ -158,6 +157,8 @@ export default function WebsiteDetailsContent() {
       day: "numeric",
     }).format(new Date(date));
   };
+
+  if (fetchingData) return <LoadingComponent />;
 
   return (
     <div className="min-h-screen relative bg-gradient-to-br from-cyan-50 via-cyan-100 to-cyan-50 dark:from-cyan-950 dark:via-black dark:to-cyan-950">

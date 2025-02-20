@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
-import { Search } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { createWebsiteAction, deleteWebsiteAction, fetchWebsitesAction, updateWebsiteNameAction } from "@/actions/chat-with-site";
 import { Website } from "@prisma/client";
 import { debounce } from "lodash";
+import LoadingComponent from "@/app/(inner-routes)/loading";
 
 // Format date consistently
 const formatDate = (dateString: string) => {
@@ -36,6 +37,7 @@ export function ChatWithSiteContent() {
   const [sortBy, setSortBy] = useState<string>("newest");
   const [url, setUrl] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [fetchingData, setFetchingData] = useState(false);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -63,10 +65,13 @@ export function ChatWithSiteContent() {
   useEffect(() => {
     const fetchSites = async () => {
       try {
+        setFetchingData(true);
         const result = await fetchWebsitesAction(sortBy, searchQuery);
         setSites(result); 
       } catch (error) {
         console.log("Error fetching sites:", error);
+      } finally {
+        setFetchingData(false);
       }
     }
     fetchSites();
@@ -239,19 +244,28 @@ export function ChatWithSiteContent() {
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             List of Sites
           </h2>
-          {sites.map((site) => (
-            <WebsiteCard
-              key={site.id}
-              site={site}
-              onCardClick={handleCardClick}
-              onDelete={handleDeleteSite}
-              onUpdateName={handleUpdateSiteName}
-            />
-          ))}
-          {sites.length === 0 && (
+          {fetchingData && (
             <div className="text-center text-gray-500 dark:text-gray-400 py-8">
-              No sites found. Upload one to get started!
+              Loading sites...
             </div>
+          )}
+          {!fetchingData && (
+            <>
+              {sites.map((site) => (
+                <WebsiteCard
+                  key={site.id}
+                  site={site}
+                  onCardClick={handleCardClick}
+                  onDelete={handleDeleteSite}
+                  onUpdateName={handleUpdateSiteName}
+                />
+              ))}
+              {sites.length === 0 && (
+                <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+                  No sites found. Upload one to get started!
+                </div>
+              )}
+            </>
           )}
         </motion.div>
       </motion.div>

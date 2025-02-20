@@ -35,7 +35,7 @@ export function WebsiteDetailsCard({
             <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300 group">
               <ExternalLink className="h-5 w-5 group-hover:text-primary transition-colors duration-300" />
               <a href={websiteData?.url} target="_blank" rel="noopener noreferrer" 
-                className="hover:text-primary transition-colors duration-300 text-lg">
+                className="hover:text-primary transition-colors duration-300 text-lg break-all sm:mr-10">
                 {websiteData?.url}
               </a>
             </div>
@@ -127,6 +127,11 @@ export function WebsiteDetailsCard({
                 </div>
               </Card>
             ))}
+            {notes.length === 0 && (
+              <p className="text-gray-500 dark:text-gray-400 text-center col-span-2 mt-10">
+                No notes added yet.
+              </p>
+            )}
           </AnimatePresence>
         </div>
       </div>

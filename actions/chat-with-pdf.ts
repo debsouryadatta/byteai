@@ -261,10 +261,14 @@ export const fetchPdfMessagesAction = async (pdfId: string) => {
         const messages = await db.pdf.findUnique({
             where: { id: pdfId, userId: userId },
             select: {
-                chatHistory: true
+                chatHistory: true,
+                name: true
             }
         })
-        return messages?.chatHistory || [];
+        return {
+            messages: messages?.chatHistory || [],
+            name: messages?.name || ''
+        };
     } catch (error) {
         console.log("Error fetching pdf messages:", error);
         throw error;

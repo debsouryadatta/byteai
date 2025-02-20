@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { PdfDetailsCard } from "@/components/chat-with-pdf/pdf-details-card";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import { PdfDetailsDialog } from "@/components/chat-with-pdf/pdf-details-dialog"
 import { Note, Pdf } from "@prisma/client";
 import { addPdfNoteAction, deletePdfNoteAction, fetchPdfByIdAction, fetchPdfNotesAction, updatePdfNoteAction } from "@/actions/chat-with-pdf";
 import { useParams } from 'next/navigation'
+import LoadingComponent from "@/app/(inner-routes)/loading";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -53,32 +54,30 @@ export default function PdfDetailsContent() {
     name: "",
     content: ""
   });
+  const [fetchingData, setFetchingData] = useState(false);
 
   useEffect(() => {
-    const fetchPdfById = async () => {
+    const fetchPdfDataAndNotes = async () => {
       try {
-        const pdf = await fetchPdfByIdAction(pdfId);
+        setFetchingData(true);
+        const [pdf, notes] = await Promise.all([
+          fetchPdfByIdAction(pdfId),
+          fetchPdfNotesAction(pdfId)
+        ]);
         if (!pdf) {
           router.push("/chat-with-pdf");
           return;
         }
         setPdfData(pdf);
-      } catch (error) {
-        console.log("Error fetching pdf:", error);
-      }
-    }
-
-    const fetchPdfNotes = async () => {
-      try {
-        const notes = await fetchPdfNotesAction(pdfId);
         setNotes(notes);
         console.log("Notes:", notes);
       } catch (error) {
-        console.log("Error fetching pdf notes:", error);
+        console.log("Error fetching pdf data and notes:", error);
+      } finally {
+        setFetchingData(false);
       }
-    }
-    fetchPdfById();
-    fetchPdfNotes();
+  };
+  fetchPdfDataAndNotes();
   }, [pdfId])
   
 
@@ -158,6 +157,8 @@ export default function PdfDetailsContent() {
       day: "numeric",
     }).format(new Date(date));
   };
+
+  if (fetchingData) return <LoadingComponent />;
 
   return (
     <div className="min-h-screen relative bg-gradient-to-br from-cyan-50 via-cyan-100 to-cyan-50 dark:from-cyan-950 dark:via-black dark:to-cyan-950">

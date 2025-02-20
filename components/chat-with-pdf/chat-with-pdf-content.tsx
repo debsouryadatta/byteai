@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
-import { Search, Upload, X } from "lucide-react";
+import { Loader2, Search, Upload, X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -20,6 +20,7 @@ import { createPdfAction, deletePdfAction, fetchPdfsAction, updatePdfNameAction 
 import { Pdf } from "@prisma/client";
 import { debounce } from "lodash";
 import { useDropzone } from "react-dropzone";
+import LoadingComponent from "@/app/(inner-routes)/loading";
 
 const MotionCard = motion(Card);
 
@@ -30,6 +31,7 @@ export function ChatWithPdfContent() {
   const [sortBy, setSortBy] = useState<string>("newest");
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fetchingData, setFetchingData] = useState(false);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     // Only take the last file if multiple files are dropped
@@ -81,10 +83,13 @@ export function ChatWithPdfContent() {
   useEffect(() => {
     const fetchPdfs = async () => {
       try {
+        setFetchingData(true);
         const result = await fetchPdfsAction(sortBy, searchQuery);
         setPdfs(result);
       } catch (error) {
         console.log("Error fetching pdfs:", error);
+      } finally {
+        setFetchingData(false);
       }
     }
     fetchPdfs();
@@ -296,19 +301,28 @@ export function ChatWithPdfContent() {
           variants={itemVariants}
           className="max-w-3xl mx-auto grid grid-cols-1 gap-4"
         >
-          {pdfs.map((pdf) => (
-            <PdfCard
-              key={pdf.id}
-              pdf={pdf}
-              onCardClick={handleCardClick}
-              onDelete={handleDeletePdf}
-              onUpdateName={handleUpdatePdfName}
-            />
-          ))}
-          {pdfs.length === 0 && (
+          {fetchingData && (
             <div className="text-center text-gray-500 dark:text-gray-400 py-8">
-              No PDFs found. Upload one to get started!
+              Loading sites...
             </div>
+          )}
+          {!fetchingData && (
+            <>
+              {pdfs.map((pdf) => (
+                <PdfCard
+                  key={pdf.id}
+                  pdf={pdf}
+                  onCardClick={handleCardClick}
+                  onDelete={handleDeletePdf}
+                  onUpdateName={handleUpdatePdfName}
+                />
+              ))}
+              {pdfs.length === 0 && (
+                <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+                  No PDFs found. Upload one to get started!
+                </div>
+              )}
+            </>
           )}
         </motion.div>
       </motion.div>

@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Send, Bot, User } from "lucide-react";
+import { ArrowLeft, Send, Bot, User, Trash } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -13,12 +13,27 @@ import { useParams } from 'next/navigation'
 import { fetchWebsiteMessagesAction, updateWebsiteMessagesAction } from "@/actions/chat-with-site";
 import { toast } from "sonner";
 import { generateId } from "ai";
+import LoadingComponent from "@/app/(inner-routes)/loading";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function WebsiteChatRoomContent() {
   const params = useParams();
   const websiteId = (params as { websiteId: string }).websiteId;
   const [messagesFromDb, setMessagesFromDb] = useState<any[]>([]);
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+  const [websiteName, setWebsiteName] = useState<string>("");
+  const [fetchingData, setFetchingData] = useState(false);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const { messages, input, handleInputChange, handleSubmit, isLoading, reload, setMessages } = useChat({
     initialMessages: [
       {
         role: "assistant",
@@ -52,11 +67,15 @@ export default function WebsiteChatRoomContent() {
   useEffect(() => {
     const fetchWebsiteMessages = async () => {
      try {
-        const messages = await fetchWebsiteMessagesAction(websiteId);
+        setFetchingData(true);
+        const { messages, name } = await fetchWebsiteMessagesAction(websiteId);
         setMessagesFromDb(messages);
+        setWebsiteName(name);
      } catch (error) {
         console.log("Error fetching website messages:", error);
-     } 
+     } finally {
+        setFetchingData(false);
+     }
     }
     fetchWebsiteMessages();
   }, [websiteId]);
@@ -74,8 +93,10 @@ export default function WebsiteChatRoomContent() {
     }
   };
 
+  if (fetchingData) return <LoadingComponent />;
+
   return (
-    <div className="flex flex-col min-h-[100dvh] bg-gradient-to-br from-cyan-50 via-cyan-100 to-cyan-50 dark:from-cyan-950 dark:via-black dark:to-cyan-950">
+    <div className="relative h-[100dvh] overflow-hidden bg-gradient-to-br from-cyan-50 via-cyan-100 to-cyan-50 dark:from-cyan-950 dark:via-black dark:to-cyan-950">
       {/* Grid Background Effect */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
       
@@ -112,10 +133,10 @@ export default function WebsiteChatRoomContent() {
         />
       </motion.div>
       
-      <div className="flex-1 flex flex-col container max-w-4xl mx-auto p-4">
+      <div className="container max-w-4xl mx-auto p-4 relative h-full flex flex-col">
         {/* Header */}
         <motion.div 
-          className="flex items-center space-x-4 mb-6"
+          className="flex items-center space-x-4 mb-6 flex-shrink-0"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -125,14 +146,14 @@ export default function WebsiteChatRoomContent() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
-          <h1 className="text-2xl font-bold">Chat with Website</h1>
+          <h1 className="text-2xl font-bold">{websiteName.slice(0, 18)}{websiteName.length > 18 && "..."}</h1>
         </motion.div>
 
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-0">
           {/* Chat Messages Container */}
           <motion.div
-            className="flex-1 space-y-4 overflow-y-auto hide-scrollbar pr-2 pb-4"
+            className="flex-1 space-y-4 overflow-y-auto hide-scrollbar pr-2"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
@@ -191,7 +212,7 @@ export default function WebsiteChatRoomContent() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                className="fixed bottom-24 left-0 right-0 flex justify-center"
+                className="absolute bottom-24 left-0 right-0 flex justify-center"
               >
                 <div className="bg-primary/10 text-primary px-4 py-2 rounded-full flex items-center gap-2 backdrop-blur-sm">
                   <div className="w-4 h-4 border-2 border-primary/50 border-t-primary rounded-full animate-spin" />
@@ -203,38 +224,74 @@ export default function WebsiteChatRoomContent() {
 
           {/* Input Area */}
           <motion.div
-            className="mt-4 border-t bg-transparent"
+            className="flex-shrink-0 mt-4 backdrop-blur-sm border-t bg-transparent"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8, duration: 0.5 }}
           >
-            <Card className="p-2 backdrop-blur-sm bg-background/50 border-muted shadow-lg">
-              <form onSubmit={handleSubmit} className="flex items-center space-x-2">
-                <Input
-                  value={input}
-                  onChange={handleInputChange}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Type your message..."
-                  className="flex-1 bg-transparent border-none focus-visible:ring-1 focus-visible:ring-primary/20 placeholder:text-muted-foreground/50"
-                />
-                <Button 
-                  type="submit"
-                  size="icon" 
-                  disabled={!hasMessage}
-                  className={cn(
-                    "rounded-full transition-all duration-200",
-                    hasMessage 
-                      ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25" 
-                      : "bg-muted/50 text-muted-foreground cursor-not-allowed"
-                  )}
-                >
-                  <Send className={cn(
-                    "h-4 w-4 transition-transform",
-                    hasMessage && "translate-x-0.5"
-                  )} />
-                </Button>
-              </form>
-            </Card>
+            <div className="container max-w-4xl mx-auto px-0">
+              <Card className="p-2 backdrop-blur-sm bg-background/50 border-muted shadow-lg">
+                <form onSubmit={handleSubmit} className="flex items-center space-x-2">
+                  <Input
+                    value={input}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Type your message..."
+                    className="flex-1 bg-transparent border-none focus-visible:ring-1 focus-visible:ring-primary/20 placeholder:text-muted-foreground/50"
+                  />
+                  <Button 
+                    type="submit"
+                    size="icon" 
+                    disabled={!hasMessage}
+                    className={cn(
+                      "rounded-full transition-all duration-200",
+                      hasMessage 
+                        ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-primary/25" 
+                        : "bg-muted/50 text-muted-foreground cursor-not-allowed"
+                    )}
+                  >
+                    <Send className={cn(
+                      "h-4 w-4 transition-transform",
+                      hasMessage && "translate-x-0.5"
+                    )} />
+                  </Button>
+                  <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        size="icon"
+                        className="flex-shrink-0 rounded-full bg-muted/50 text-muted-foreground hover:bg-muted/70 transition-all duration-200"
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Clear Chat History</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to clear the chat history? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={async() => {
+                          setMessagesFromDb([]);
+                          await updateWebsiteMessagesAction(websiteId, []);
+                          // Reset chat to initial state
+                          setMessages([{
+                            role: "assistant",
+                            content: "Hello! I'm ready to help you explore and understand the website content. What would you like to know?",
+                            id: "1",
+                          }]);
+                          toast.success("Chat history cleared");
+                        }}>
+                          Clear Chat
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </form>
+              </Card>
+            </div>
           </motion.div>
         </div>
       </div>

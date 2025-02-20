@@ -212,10 +212,14 @@ export const fetchWebsiteMessagesAction = async (websiteId: string) => {
         const messages = await db.website.findUnique({
             where: { id: websiteId, userId: userId },
             select: {
-                chatHistory: true
+                chatHistory: true,
+                name: true
             }
         })
-        return messages?.chatHistory || [];
+        return {
+            messages: messages?.chatHistory || [],
+            name: messages?.name || ''
+        };
     } catch (error) {
         console.log("Error fetching website messages:", error);
         throw error;
